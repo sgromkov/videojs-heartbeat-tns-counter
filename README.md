@@ -36,7 +36,14 @@ This is the simplest case. Get the script in whatever way you prefer and include
 <script>
   var player = videojs('my-video');
 
-  player.heartbeatTnsCounter();
+  player.heartbeatTnsCounter({
+    catid: 2,
+    vcid: 211231,
+    vcver: 0,
+    tmsec: "your_tmsec",
+    TnsAccount: "your_TnsAccount",
+    interval: 2000,
+  });
 </script>
 ```
 
@@ -54,7 +61,14 @@ require('videojs-heartbeat-tns-counter');
 
 var player = videojs('my-video');
 
-player.heartbeatTnsCounter();
+player.heartbeatTnsCounter({
+  catid: 2,
+  vcid: 211231,
+  vcver: 0,
+  tmsec: "your_tmsec",
+  TnsAccount: "your_TnsAccount",
+  interval: 2000,
+});
 ```
 
 ### RequireJS/AMD
@@ -65,7 +79,14 @@ When using with RequireJS (or another AMD library), get the script in whatever w
 require(['video.js', 'videojs-heartbeat-tns-counter'], function(videojs) {
   var player = videojs('my-video');
 
-  player.heartbeatTnsCounter();
+  player.heartbeatTnsCounter({
+    catid: 2,
+    vcid: 211231,
+    vcver: 0,
+    tmsec: "your_tmsec",
+    TnsAccount: "your_TnsAccount",
+    interval: 2000,
+  });
 });
 ```
 
