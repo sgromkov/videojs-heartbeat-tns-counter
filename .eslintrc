@@ -1,0 +1,8 @@
+{
+  "globals": {
+    "document": true,
+    "window": true,
+    "Image": true,
+    "navigator": true
+  }
+}

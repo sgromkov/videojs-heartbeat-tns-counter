@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title>videojs-heartbeat-tns-counter Demo</title>
   <link href="node_modules/video.js/dist/video-js.css" rel="stylesheet">
-  
+
 </head>
 <body>
   <video id="videojs-heartbeat-tns-counter-player" class="video-js vjs-default-skin" controls>
@@ -15,13 +15,20 @@
     <li><a href="test/">Run unit tests in browser.</a></li>
     <li><a href="docs/api/">Read generated docs.</a></li>
   </ul>
-  
+
   <script src="node_modules/video.js/dist/video.js"></script>
   <script src="dist/videojs-heartbeat-tns-counter.js"></script>
   <script>
     (function(window, videojs) {
       var player = window.player = videojs('videojs-heartbeat-tns-counter-player');
-      player.heartbeatTnsCounter();
+      player.heartbeatTnsCounter({
+        catid: 2,
+        vcid: 211231,
+        vcver: 0,
+        tmsec: "your_tmsec",
+        TnsAccount: "your_TnsAccount",
+        interval: 2000,
+      });
     }(window, window.videojs));
   </script>
 </body>
