@@ -18,7 +18,10 @@ const defaults = {
   app: null,
   TnsAccount: null,
   tmsec: null,
-  interval: 30000
+  interval: 30000,
+  live: false,
+  dvr: false,
+  serverTimestamp: 0
 };
 
 // Cross-compatibility for Video.js 5 and 6.
@@ -71,6 +74,15 @@ class HeartbeatTnsCounter {
     this.player = player;
     this.options = options;
     this.tnsTimer = null;
+    this.clientServerTimeDifference = 0;
+    this.allPrerollsEnded = false;
+    this.prerollExists = false;
+
+    const clientTimestamp = Math.floor(Date.now() / 1000);
+
+    if (this.options.serverTimestamp) {
+      this.clientServerTimeDifference = clientTimestamp - this.options.serverTimestamp;
+    }
   }
 
   /**
@@ -80,6 +92,7 @@ class HeartbeatTnsCounter {
    */
   startTNSTimer() {
     const TNSCatalogCounter = () => {
+      const clientServerTimeDifference = this.options.clientServerTimeDifference;
       const currentTime = this.player.currentTime();
 
       const tnsParams = {
@@ -98,6 +111,16 @@ class HeartbeatTnsCounter {
         app: this.options.app
       };
 
+      if (this.options.live) {
+        if (tnsParams.fts < 0) {
+          // DVR position
+          tnsParams.fts = tnsParams.vts + tnsParams.fts - clientServerTimeDifference;
+        } else {
+          // live without DVR
+          tnsParams.fts = tnsParams.vts - clientServerTimeDifference;
+        }
+      }
+
       let tnsUrl = (document.location.protocol === 'https:' ? 'https://' : 'http://') +
         'www.tns-counter.ru/V13a**';
 
@@ -112,6 +135,13 @@ class HeartbeatTnsCounter {
       tnsUrl = tnsUrl.substr(0, tnsUrl.length - 1);
       tnsUrl += '**' + this.options.TnsAccount +
         '/ru/UTF-8/tmsec=' + this.options.tmsec + '/';
+
+      //console.log(
+      //  "video time: " + currentTime,
+      //  "tnsParams:",
+      //  tnsParams,
+      //  tnsUrl
+      //);
 
       (new Image()).src = tnsUrl;
     };
@@ -142,9 +172,46 @@ class HeartbeatTnsCounter {
 
     this.player.addClass('vjs-videojs-heartbeat-tns-counter');
 
-    this.player.on('play', () => this.startTNSTimer());
-    this.player.on('pause', () => this.stopTNSTimer());
-    this.player.on('ended', () => this.stopTNSTimer());
+    this.player.one('prerollExists', () => {
+      //console.warn('Event: prerollExists');
+      this.prerollExists = true;
+    });
+
+    this.player.one('allPrerollsEnded', () => {
+      //console.warn('Event: allPrerollsEnded');
+      this.allPrerollsEnded = true;
+
+      // Если был показан преролл и это не прямая трансляция:
+      if (this.prerollExists) {
+        if (this.options.live && !this.options.dvr) {
+          this.player.trigger('play');
+        } else if (!this.options.live) {
+          // Ставим на паузу, а потом запускаем, чтобы heartbeat не дублировался.
+          // Перематываем плеер на начало, т.к. из-за прероллов кадры смещаются:
+          this.player.pause();
+          this.player.currentTime(0);
+          this.player.play();
+        }
+      }
+    });
+
+    this.player.on('play', () => {
+      //console.warn('Event: Play');
+      if (this.allPrerollsEnded && !this.tnsTimerStarted) {
+        this.tnsTimerStarted = true;
+        this.startTNSTimer();
+      }
+    });
+    this.player.on('pause', () => {
+      //console.warn('Event: Pause');
+      this.tnsTimerStarted = false;
+      this.stopTNSTimer();
+    });
+    this.player.on('ended', () => {
+      //console.warn('Event: Ended');
+      this.tnsTimerStarted = false;
+      this.stopTNSTimer();
+    });
   }
 }
 
