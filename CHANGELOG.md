@@ -1,3 +1,4 @@
-<a name="1.0.0"></a>
-# 1.0.0 (2017-11-22)
+# CHANGELOG
 
+## 1.0.0 (2017-11-22)
+* [@sgromkov](https://github.com/sgromkov/): Created plugin.
