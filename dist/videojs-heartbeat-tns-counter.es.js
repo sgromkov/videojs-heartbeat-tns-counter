@@ -316,17 +316,17 @@ var HeartbeatTnsCounter = function () {
       //console.warn('Event: allPrerollsEnded');
       _this2.allPrerollsEnded = true;
 
-      // Если был показан преролл и это не прямая трансляция:
-      if (_this2.prerollExists) {
-        if (_this2.options.live && !_this2.options.dvr) {
-          _this2.player.trigger('play');
-        } else if (!_this2.options.live) {
-          // Ставим на паузу, а потом запускаем, чтобы heartbeat не дублировался.
-          // Перематываем плеер на начало, т.к. из-за прероллов кадры смещаются:
-          _this2.player.pause();
-          _this2.player.currentTime(0);
-          _this2.player.play();
-        }
+      // Если был показан преролл и это не прямая трансляция,
+      // Перематываем плеер на начало, т.к. из-за прероллов кадры смещаются:
+      if (_this2.prerollExists && !_this2.options.live) {
+        _this2.player.pause();
+        _this2.player.currentTime(0);
+        _this2.player.play();
+      }
+
+      if (!_this2.tnsTimerStarted) {
+        _this2.tnsTimerStarted = true;
+        _this2.startTNSTimer();
       }
     });
 
