@@ -235,7 +235,7 @@ var HeartbeatTnsCounter = function () {
     var _this = this;
 
     var TNSCatalogCounter = function TNSCatalogCounter() {
-      var clientServerTimeDifference = _this.options.clientServerTimeDifference;
+      var clientServerTimeDifference = _this.clientServerTimeDifference;
       var currentTime = _this.player.currentTime();
 
       var tnsParams = {
