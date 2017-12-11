@@ -277,12 +277,12 @@ var HeartbeatTnsCounter = function () {
       tnsUrl = tnsUrl.substr(0, tnsUrl.length - 1);
       tnsUrl += '**' + _this.options.TnsAccount + '/ru/UTF-8/tmsec=' + _this.options.tmsec + '/';
 
-      //console.log(
-      //  "video time: " + currentTime,
-      //  "tnsParams:",
-      //  tnsParams,
-      //  tnsUrl
-      //);
+      // console.log(
+      //   "video time: " + currentTime,
+      //   "tnsParams:",
+      //   tnsParams,
+      //   tnsUrl
+      // );
 
       new Image().src = tnsUrl;
     };
@@ -320,12 +320,12 @@ var HeartbeatTnsCounter = function () {
     this.player.addClass('vjs-videojs-heartbeat-tns-counter');
 
     this.player.one('prerollExists', function () {
-      //console.warn('Event: prerollExists');
+      // console.warn('Event: prerollExists');
       _this2.prerollExists = true;
     });
 
     this.player.one('allPrerollsEnded', function () {
-      //console.warn('Event: allPrerollsEnded');
+      // console.warn('Event: allPrerollsEnded');
       _this2.allPrerollsEnded = true;
 
       // Если был показан преролл и это не прямая трансляция,
@@ -343,19 +343,19 @@ var HeartbeatTnsCounter = function () {
     });
 
     this.player.on('play', function () {
-      //console.warn('Event: Play');
+      // console.warn('Event: Play');
       if (_this2.allPrerollsEnded && !_this2.tnsTimerStarted) {
         _this2.tnsTimerStarted = true;
         _this2.startTNSTimer();
       }
     });
     this.player.on('pause', function () {
-      //console.warn('Event: Pause');
+      // console.warn('Event: Pause');
       _this2.tnsTimerStarted = false;
       _this2.stopTNSTimer();
     });
     this.player.on('ended', function () {
-      //console.warn('Event: Ended');
+      // console.warn('Event: Ended');
       _this2.tnsTimerStarted = false;
       _this2.stopTNSTimer();
     });
