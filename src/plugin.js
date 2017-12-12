@@ -230,9 +230,7 @@ class HeartbeatTnsCounter {
 const heartbeatTnsCounter = function(options) {
   const counter = new HeartbeatTnsCounter(this, videojs.mergeOptions(defaults, options));
 
-  this.ready(() => {
-    counter.ready();
-  });
+  counter.ready();
 };
 
 // Register the plugin with video.js.
