@@ -4,7 +4,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var videojs = _interopDefault(require('video.js'));
 
-var version = "1.0.0";
+var version = "1.0.2";
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -373,9 +373,7 @@ var HeartbeatTnsCounter = function () {
 var heartbeatTnsCounter = function heartbeatTnsCounter(options) {
   var counter = new HeartbeatTnsCounter(this, videojs.mergeOptions(defaults, options));
 
-  this.ready(function () {
-    counter.ready();
-  });
+  counter.ready();
 };
 
 // Register the plugin with video.js.
