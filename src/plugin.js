@@ -92,6 +92,11 @@ class HeartbeatTnsCounter {
    */
   startTNSTimer() {
     const TNSCatalogCounter = () => {
+
+      if (this.player.paused()) {
+        return;
+      }
+
       const clientServerTimeDifference = this.clientServerTimeDifference;
       const currentTime = this.player.currentTime();
 
