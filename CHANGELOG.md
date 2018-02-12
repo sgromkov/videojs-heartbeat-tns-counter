@@ -1,7 +1,7 @@
-<a name="1.0.5"></a>
-## [1.0.5](https://github.com/sgromkov/videojs-heartbeat-tns-counter/compare/v1.0.4...v1.0.5) (2018-02-12)
-
 # CHANGELOG
+
+## 1.0.5 (2018-02-12)
+* [@sgromkov](https://github.com/sgromkov/): Fix first lost FTS when it was NULL.
 
 ## 1.0.4 (2018-02-12)
 * [@sgromkov](https://github.com/sgromkov/): Fix counter request after prerolls ending, and avoid Adblock.
