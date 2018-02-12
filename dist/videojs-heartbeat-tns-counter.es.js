@@ -1,6 +1,6 @@
 import videojs from 'video.js';
 
-var version = "1.0.4";
+var version = "1.0.5";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;

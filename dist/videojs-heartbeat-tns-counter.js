@@ -1,6 +1,6 @@
 /**
  * videojs-heartbeat-tns-counter
- * @version 1.0.4
+ * @version 1.0.5
  * @copyright 2018 Sergey Gromkov <sgromkov@gmail.com>
  * @license MIT
  */
@@ -12,7 +12,7 @@
 
 videojs = videojs && videojs.hasOwnProperty('default') ? videojs['default'] : videojs;
 
-var version = "1.0.4";
+var version = "1.0.5";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
