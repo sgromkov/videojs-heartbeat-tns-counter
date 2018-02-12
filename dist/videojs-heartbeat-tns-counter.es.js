@@ -1,6 +1,16 @@
 import videojs from 'video.js';
 
-var version = "1.0.2";
+var version = "1.0.3";
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+
+
+
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -204,6 +214,7 @@ var HeartbeatTnsCounter = function () {
     this.clientServerTimeDifference = 0;
     this.allPrerollsEnded = false;
     this.prerollExists = false;
+    this.pauseFts = null;
 
     var clientTimestamp = Math.floor(Date.now() / 1000);
 
@@ -211,6 +222,60 @@ var HeartbeatTnsCounter = function () {
       this.clientServerTimeDifference = clientTimestamp - this.options.serverTimestamp;
     }
   }
+
+  /**
+   * Returned valid fts value
+   *
+   * @function getValidFts
+   *
+   * @param {number}  currentTime
+   *                  Current video content time in sec
+   *
+   * @param {number}  vts
+   *                  Current user time in sec
+   *
+   * @param {number}  clientServerTimeDifference
+   *                  Difference between client and server timestamp
+   *
+   * @return {number} fts
+   */
+
+
+  HeartbeatTnsCounter.prototype.getValidFts = function getValidFts(currentTime, vts, clientServerTimeDifference) {
+    var fts = Math.round(currentTime);
+
+    if (this.options.live) {
+      if (fts < 0) {
+        // DVR position
+        fts = vts + fts - clientServerTimeDifference;
+      } else {
+        // live without DVR
+        fts = vts - clientServerTimeDifference;
+      }
+    }
+
+    return fts;
+  };
+
+  /**
+   * Try to start counter
+   *
+   * @return {boolean} false if request was breaking
+   */
+
+
+  HeartbeatTnsCounter.prototype.requestTnsTimerStarting = function requestTnsTimerStarting() {
+    // Если нет IMA (например, вырезал AdBlock)
+    if (_typeof(this.player.ima) === 'object' && !this.allPrerollsEnded) {
+      videojs.log('heartbeatTnsCounter start is break');
+      return false;
+    }
+
+    if (!this.tnsTimerStarted) {
+      this.tnsTimerStarted = true;
+      this.startTNSTimer();
+    }
+  };
 
   /**
    * Will start heartbeat TNS catalog counter timer
@@ -224,19 +289,17 @@ var HeartbeatTnsCounter = function () {
 
     var TNSCatalogCounter = function TNSCatalogCounter() {
 
-      if (_this.player.paused()) {
-        return;
-      }
-
-      var clientServerTimeDifference = _this.clientServerTimeDifference;
       var currentTime = _this.player.currentTime();
+      var clientServerTimeDifference = _this.clientServerTimeDifference;
+      var vts = Math.floor(Date.now() / 1000);
+      var fts = _this.player.paused() ? _this.pauseFts : _this.getValidFts(currentTime, vts, clientServerTimeDifference);
 
       var tnsParams = {
         catid: _this.options.catid,
         vcid: _this.options.vcid,
         vcver: _this.options.vcver,
-        fts: Math.round(currentTime),
-        vts: Math.floor(Date.now() / 1000),
+        fts: fts,
+        vts: vts,
         evtp: _this.options.live ? 1 : 2,
         dvtp: _this.options.dvtp,
         adid: _this.options.adid,
@@ -246,16 +309,6 @@ var HeartbeatTnsCounter = function () {
         mac: _this.options.mac,
         app: _this.options.app
       };
-
-      if (_this.options.live) {
-        if (tnsParams.fts < 0) {
-          // DVR position
-          tnsParams.fts = tnsParams.vts + tnsParams.fts - clientServerTimeDifference;
-        } else {
-          // live without DVR
-          tnsParams.fts = tnsParams.vts - clientServerTimeDifference;
-        }
-      }
 
       var tnsUrl = (document.location.protocol === 'https:' ? 'https://' : 'http://') + 'www.tns-counter.ru/V13a**';
 
@@ -269,13 +322,6 @@ var HeartbeatTnsCounter = function () {
 
       tnsUrl = tnsUrl.substr(0, tnsUrl.length - 1);
       tnsUrl += '**' + _this.options.TnsAccount + '/ru/UTF-8/tmsec=' + _this.options.tmsec + '/';
-
-      // console.log(
-      //   "video time: " + currentTime,
-      //   "tnsParams:",
-      //   tnsParams,
-      //   tnsUrl
-      // );
 
       new Image().src = tnsUrl;
     };
@@ -313,12 +359,10 @@ var HeartbeatTnsCounter = function () {
     this.player.addClass('vjs-videojs-heartbeat-tns-counter');
 
     this.player.one('prerollExists', function () {
-      // console.warn('Event: prerollExists');
       _this2.prerollExists = true;
     });
 
     this.player.one('allPrerollsEnded', function () {
-      // console.warn('Event: allPrerollsEnded');
       _this2.allPrerollsEnded = true;
 
       // Если был показан преролл и это не прямая трансляция,
@@ -329,26 +373,25 @@ var HeartbeatTnsCounter = function () {
         _this2.player.play();
       }
 
-      if (!_this2.tnsTimerStarted) {
-        _this2.tnsTimerStarted = true;
-        _this2.startTNSTimer();
-      }
+      _this2.requestTnsTimerStarting();
     });
 
     this.player.on('play', function () {
-      // console.warn('Event: Play');
-      if (_this2.allPrerollsEnded && !_this2.tnsTimerStarted) {
-        _this2.tnsTimerStarted = true;
-        _this2.startTNSTimer();
-      }
+      _this2.requestTnsTimerStarting();
     });
+
     this.player.on('pause', function () {
-      // console.warn('Event: Pause');
-      _this2.tnsTimerStarted = false;
-      _this2.stopTNSTimer();
+      // Не сбрасываем вызов счетчика,
+      // а сохраняем значение fts в хранилище,
+      // чтобы передавать его при паузе
+      var currentTime = _this2.player.currentTime();
+      var clientServerTimeDifference = _this2.clientServerTimeDifference;
+      var vts = Math.floor(Date.now() / 1000);
+
+      _this2.pauseFts = _this2.getValidFts(currentTime, vts, clientServerTimeDifference);
     });
+
     this.player.on('ended', function () {
-      // console.warn('Event: Ended');
       _this2.tnsTimerStarted = false;
       _this2.stopTNSTimer();
     });

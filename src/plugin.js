@@ -77,11 +77,62 @@ class HeartbeatTnsCounter {
     this.clientServerTimeDifference = 0;
     this.allPrerollsEnded = false;
     this.prerollExists = false;
+    this.pauseFts = null;
 
     const clientTimestamp = Math.floor(Date.now() / 1000);
 
     if (this.options.serverTimestamp) {
       this.clientServerTimeDifference = clientTimestamp - this.options.serverTimestamp;
+    }
+  }
+
+  /**
+   * Returned valid fts value
+   *
+   * @function getValidFts
+   *
+   * @param {number}  currentTime
+   *                  Current video content time in sec
+   *
+   * @param {number}  vts
+   *                  Current user time in sec
+   *
+   * @param {number}  clientServerTimeDifference
+   *                  Difference between client and server timestamp
+   *
+   * @return {number} fts
+   */
+  getValidFts(currentTime, vts, clientServerTimeDifference) {
+    let fts = Math.round(currentTime);
+
+    if (this.options.live) {
+      if (fts < 0) {
+        // DVR position
+        fts = vts + fts - clientServerTimeDifference;
+      } else {
+        // live without DVR
+        fts = vts - clientServerTimeDifference;
+      }
+    }
+
+    return fts;
+  }
+
+  /**
+   * Try to start counter
+   *
+   * @return {boolean} false if request was breaking
+   */
+  requestTnsTimerStarting() {
+    // Если нет IMA (например, вырезал AdBlock)
+    if (typeof this.player.ima === 'object' && !this.allPrerollsEnded) {
+      videojs.log('heartbeatTnsCounter start is break');
+      return false;
+    }
+
+    if (!this.tnsTimerStarted) {
+      this.tnsTimerStarted = true;
+      this.startTNSTimer();
     }
   }
 
@@ -93,19 +144,18 @@ class HeartbeatTnsCounter {
   startTNSTimer() {
     const TNSCatalogCounter = () => {
 
-      if (this.player.paused()) {
-        return;
-      }
-
-      const clientServerTimeDifference = this.clientServerTimeDifference;
       const currentTime = this.player.currentTime();
+      const clientServerTimeDifference = this.clientServerTimeDifference;
+      const vts = Math.floor(Date.now() / 1000);
+      const fts = (this.player.paused()) ?
+        this.pauseFts : this.getValidFts(currentTime, vts, clientServerTimeDifference);
 
       const tnsParams = {
         catid: this.options.catid,
         vcid: this.options.vcid,
         vcver: this.options.vcver,
-        fts: Math.round(currentTime),
-        vts: Math.floor(Date.now() / 1000),
+        fts,
+        vts,
         evtp: this.options.live ? 1 : 2,
         dvtp: this.options.dvtp,
         adid: this.options.adid,
@@ -115,16 +165,6 @@ class HeartbeatTnsCounter {
         mac: this.options.mac,
         app: this.options.app
       };
-
-      if (this.options.live) {
-        if (tnsParams.fts < 0) {
-          // DVR position
-          tnsParams.fts = tnsParams.vts + tnsParams.fts - clientServerTimeDifference;
-        } else {
-          // live without DVR
-          tnsParams.fts = tnsParams.vts - clientServerTimeDifference;
-        }
-      }
 
       let tnsUrl = (document.location.protocol === 'https:' ? 'https://' : 'http://') +
         'www.tns-counter.ru/V13a**';
@@ -140,13 +180,6 @@ class HeartbeatTnsCounter {
       tnsUrl = tnsUrl.substr(0, tnsUrl.length - 1);
       tnsUrl += '**' + this.options.TnsAccount +
         '/ru/UTF-8/tmsec=' + this.options.tmsec + '/';
-
-      // console.log(
-      //   "video time: " + currentTime,
-      //   "tnsParams:",
-      //   tnsParams,
-      //   tnsUrl
-      // );
 
       (new Image()).src = tnsUrl;
     };
@@ -178,12 +211,10 @@ class HeartbeatTnsCounter {
     this.player.addClass('vjs-videojs-heartbeat-tns-counter');
 
     this.player.one('prerollExists', () => {
-      // console.warn('Event: prerollExists');
       this.prerollExists = true;
     });
 
     this.player.one('allPrerollsEnded', () => {
-      // console.warn('Event: allPrerollsEnded');
       this.allPrerollsEnded = true;
 
       // Если был показан преролл и это не прямая трансляция,
@@ -194,26 +225,25 @@ class HeartbeatTnsCounter {
         this.player.play();
       }
 
-      if (!this.tnsTimerStarted) {
-        this.tnsTimerStarted = true;
-        this.startTNSTimer();
-      }
+      this.requestTnsTimerStarting();
     });
 
     this.player.on('play', () => {
-      // console.warn('Event: Play');
-      if (this.allPrerollsEnded && !this.tnsTimerStarted) {
-        this.tnsTimerStarted = true;
-        this.startTNSTimer();
-      }
+      this.requestTnsTimerStarting();
     });
+
     this.player.on('pause', () => {
-      // console.warn('Event: Pause');
-      this.tnsTimerStarted = false;
-      this.stopTNSTimer();
+      // Не сбрасываем вызов счетчика,
+      // а сохраняем значение fts в хранилище,
+      // чтобы передавать его при паузе
+      const currentTime = this.player.currentTime();
+      const clientServerTimeDifference = this.clientServerTimeDifference;
+      const vts = Math.floor(Date.now() / 1000);
+
+      this.pauseFts = this.getValidFts(currentTime, vts, clientServerTimeDifference);
     });
+
     this.player.on('ended', () => {
-      // console.warn('Event: Ended');
       this.tnsTimerStarted = false;
       this.stopTNSTimer();
     });
