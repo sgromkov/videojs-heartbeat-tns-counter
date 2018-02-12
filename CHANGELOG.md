@@ -1,7 +1,7 @@
-<a name="1.0.3"></a>
-## 1.0.3 (2017-12-28)
-
 # CHANGELOG
+
+## 1.0.3 (2017-12-28)
+* [@sgromkov](https://github.com/sgromkov/): Add counter break if player on pause.
 
 ## 1.0.2 (2017-12-12)
 * [@sgromkov](https://github.com/sgromkov/): Remove listener for player.ready() and start counter.ready() immediately.
