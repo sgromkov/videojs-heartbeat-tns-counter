@@ -1,9 +1,3 @@
-/**
- * videojs-heartbeat-tns-counter
- * @version 1.0.3
- * @copyright 2018 Sergey Gromkov <sgromkov@gmail.com>
- * @license MIT
- */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('video.js')) :
 	typeof define === 'function' && define.amd ? define(['video.js'], factory) :
@@ -12,7 +6,7 @@
 
 videojs = videojs && videojs.hasOwnProperty('default') ? videojs['default'] : videojs;
 
-var version = "1.0.3";
+var version = "1.0.4";
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
@@ -220,19 +214,19 @@ var HeartbeatTnsCounter = function () {
   function HeartbeatTnsCounter(player, options) {
     classCallCheck(this, HeartbeatTnsCounter);
 
+    var clientTimestamp = Math.floor(Date.now() / 1000);
+    var serverTimestamp = options.serverTimestamp;
+    var clientServerTimeDifference = serverTimestamp ? clientTimestamp - serverTimestamp : 0;
+    var live = options.live;
+    var fts = this.getValidFts(player.currentTime(), clientTimestamp, clientServerTimeDifference, live);
+
     this.player = player;
     this.options = options;
     this.tnsTimer = null;
-    this.clientServerTimeDifference = 0;
+    this.clientServerTimeDifference = clientServerTimeDifference;
     this.allPrerollsEnded = false;
     this.prerollExists = false;
-    this.pauseFts = null;
-
-    var clientTimestamp = Math.floor(Date.now() / 1000);
-
-    if (this.options.serverTimestamp) {
-      this.clientServerTimeDifference = clientTimestamp - this.options.serverTimestamp;
-    }
+    this.pauseFts = fts;
   }
 
   /**
@@ -249,14 +243,17 @@ var HeartbeatTnsCounter = function () {
    * @param {number}  clientServerTimeDifference
    *                  Difference between client and server timestamp
    *
+   * @param {boolean} live
+   *                  true if video is LIVE or DVR
+   *
    * @return {number} fts
    */
 
 
-  HeartbeatTnsCounter.prototype.getValidFts = function getValidFts(currentTime, vts, clientServerTimeDifference) {
+  HeartbeatTnsCounter.prototype.getValidFts = function getValidFts(currentTime, vts, clientServerTimeDifference, live) {
     var fts = Math.round(currentTime);
 
-    if (this.options.live) {
+    if (live) {
       if (fts < 0) {
         // DVR position
         fts = vts + fts - clientServerTimeDifference;
@@ -304,7 +301,8 @@ var HeartbeatTnsCounter = function () {
       var currentTime = _this.player.currentTime();
       var clientServerTimeDifference = _this.clientServerTimeDifference;
       var vts = Math.floor(Date.now() / 1000);
-      var fts = _this.player.paused() ? _this.pauseFts : _this.getValidFts(currentTime, vts, clientServerTimeDifference);
+      var live = _this.options.live;
+      var fts = _this.player.paused() ? _this.pauseFts : _this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
 
       var tnsParams = {
         catid: _this.options.catid,
@@ -397,10 +395,11 @@ var HeartbeatTnsCounter = function () {
       // а сохраняем значение fts в хранилище,
       // чтобы передавать его при паузе
       var currentTime = _this2.player.currentTime();
-      var clientServerTimeDifference = _this2.clientServerTimeDifference;
       var vts = Math.floor(Date.now() / 1000);
+      var clientServerTimeDifference = _this2.clientServerTimeDifference;
+      var live = _this2.options.live;
 
-      _this2.pauseFts = _this2.getValidFts(currentTime, vts, clientServerTimeDifference);
+      _this2.pauseFts = _this2.getValidFts(currentTime, vts, clientServerTimeDifference, live);
     });
 
     this.player.on('ended', function () {

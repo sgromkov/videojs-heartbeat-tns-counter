@@ -71,19 +71,20 @@ class HeartbeatTnsCounter {
    *           A plain object containing options for the plugin.
    */
   constructor(player, options) {
+    const clientTimestamp = Math.floor(Date.now() / 1000);
+    const serverTimestamp = options.serverTimestamp;
+    const clientServerTimeDifference = (serverTimestamp) ?
+      clientTimestamp - serverTimestamp : 0;
+    const live = options.live;
+    const fts = this.getValidFts(player.currentTime(), clientTimestamp, clientServerTimeDifference, live);
+
     this.player = player;
     this.options = options;
     this.tnsTimer = null;
-    this.clientServerTimeDifference = 0;
+    this.clientServerTimeDifference = clientServerTimeDifference;
     this.allPrerollsEnded = false;
     this.prerollExists = false;
-    this.pauseFts = null;
-
-    const clientTimestamp = Math.floor(Date.now() / 1000);
-
-    if (this.options.serverTimestamp) {
-      this.clientServerTimeDifference = clientTimestamp - this.options.serverTimestamp;
-    }
+    this.pauseFts = fts;
   }
 
   /**
@@ -100,12 +101,15 @@ class HeartbeatTnsCounter {
    * @param {number}  clientServerTimeDifference
    *                  Difference between client and server timestamp
    *
+   * @param {boolean} live
+   *                  true if video is LIVE or DVR
+   *
    * @return {number} fts
    */
-  getValidFts(currentTime, vts, clientServerTimeDifference) {
+  getValidFts(currentTime, vts, clientServerTimeDifference, live) {
     let fts = Math.round(currentTime);
 
-    if (this.options.live) {
+    if (live) {
       if (fts < 0) {
         // DVR position
         fts = vts + fts - clientServerTimeDifference;
@@ -147,8 +151,10 @@ class HeartbeatTnsCounter {
       const currentTime = this.player.currentTime();
       const clientServerTimeDifference = this.clientServerTimeDifference;
       const vts = Math.floor(Date.now() / 1000);
+      const live = this.options.live;
       const fts = (this.player.paused()) ?
-        this.pauseFts : this.getValidFts(currentTime, vts, clientServerTimeDifference);
+        this.pauseFts :
+        this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
 
       const tnsParams = {
         catid: this.options.catid,
@@ -237,10 +243,11 @@ class HeartbeatTnsCounter {
       // а сохраняем значение fts в хранилище,
       // чтобы передавать его при паузе
       const currentTime = this.player.currentTime();
-      const clientServerTimeDifference = this.clientServerTimeDifference;
       const vts = Math.floor(Date.now() / 1000);
+      const clientServerTimeDifference = this.clientServerTimeDifference;
+      const live = this.options.live;
 
-      this.pauseFts = this.getValidFts(currentTime, vts, clientServerTimeDifference);
+      this.pauseFts = this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
     });
 
     this.player.on('ended', () => {
