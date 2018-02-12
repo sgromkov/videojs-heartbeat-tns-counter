@@ -1,3 +1,9 @@
+/**
+ * videojs-heartbeat-tns-counter
+ * @version 1.0.4
+ * @copyright 2018 Sergey Gromkov <sgromkov@gmail.com>
+ * @license MIT
+ */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('video.js')) :
 	typeof define === 'function' && define.amd ? define(['video.js'], factory) :
