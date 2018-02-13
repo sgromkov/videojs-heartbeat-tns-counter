@@ -364,7 +364,7 @@ var HeartbeatTnsCounter = function () {
     });
 
     this.player.on('pause', function () {
-      this.stopTNSTimer();
+      _this2.stopTNSTimer();
     });
 
     this.player.on('ended', function () {
