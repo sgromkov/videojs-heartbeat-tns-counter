@@ -1,9 +1,3 @@
-/**
- * videojs-heartbeat-tns-counter
- * @version 1.0.5
- * @copyright 2018 Sergey Gromkov <sgromkov@gmail.com>
- * @license MIT
- */
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('video.js')) :
 	typeof define === 'function' && define.amd ? define(['video.js'], factory) :
@@ -13,16 +7,6 @@
 videojs = videojs && videojs.hasOwnProperty('default') ? videojs['default'] : videojs;
 
 var version = "1.0.5";
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-
-
-
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -223,16 +207,11 @@ var HeartbeatTnsCounter = function () {
     var clientTimestamp = Math.floor(Date.now() / 1000);
     var serverTimestamp = options.serverTimestamp;
     var clientServerTimeDifference = serverTimestamp ? clientTimestamp - serverTimestamp : 0;
-    var live = options.live;
-    var fts = this.getValidFts(player.currentTime(), clientTimestamp, clientServerTimeDifference, live);
 
     this.player = player;
     this.options = options;
     this.tnsTimer = null;
     this.clientServerTimeDifference = clientServerTimeDifference;
-    this.allPrerollsEnded = false;
-    this.prerollExists = false;
-    this.pauseFts = fts;
   }
 
   /**
@@ -275,21 +254,13 @@ var HeartbeatTnsCounter = function () {
   /**
    * Try to start counter
    *
-   * @return {boolean} false if request was breaking
+   * @function requestTnsTimerStarting
    */
 
 
   HeartbeatTnsCounter.prototype.requestTnsTimerStarting = function requestTnsTimerStarting() {
-    // Если нет IMA (например, вырезал AdBlock)
-    if (_typeof(this.player.ima) === 'object' && !this.allPrerollsEnded) {
-      videojs.log('heartbeatTnsCounter start is break');
-      return false;
-    }
-
-    if (!this.tnsTimerStarted) {
-      this.tnsTimerStarted = true;
-      this.startTNSTimer();
-    }
+    this.stopTNSTimer();
+    this.startTNSTimer();
   };
 
   /**
@@ -308,7 +279,7 @@ var HeartbeatTnsCounter = function () {
       var clientServerTimeDifference = _this.clientServerTimeDifference;
       var vts = Math.floor(Date.now() / 1000);
       var live = _this.options.live;
-      var fts = _this.player.paused() ? _this.pauseFts : _this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
+      var fts = _this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
 
       var tnsParams = {
         catid: _this.options.catid,
@@ -374,42 +345,11 @@ var HeartbeatTnsCounter = function () {
 
     this.player.addClass('vjs-videojs-heartbeat-tns-counter');
 
-    this.player.one('prerollExists', function () {
-      _this2.prerollExists = true;
-    });
-
-    this.player.one('allPrerollsEnded', function () {
-      _this2.allPrerollsEnded = true;
-
-      // Если был показан преролл и это не прямая трансляция,
-      // Перематываем плеер на начало, т.к. из-за прероллов кадры смещаются:
-      if (_this2.prerollExists && !_this2.options.live) {
-        _this2.player.pause();
-        _this2.player.currentTime(0);
-        _this2.player.play();
-      }
-
+    this.player.on('playing', function () {
       _this2.requestTnsTimerStarting();
-    });
-
-    this.player.on('play', function () {
-      _this2.requestTnsTimerStarting();
-    });
-
-    this.player.on('pause', function () {
-      // Не сбрасываем вызов счетчика,
-      // а сохраняем значение fts в хранилище,
-      // чтобы передавать его при паузе
-      var currentTime = _this2.player.currentTime();
-      var vts = Math.floor(Date.now() / 1000);
-      var clientServerTimeDifference = _this2.clientServerTimeDifference;
-      var live = _this2.options.live;
-
-      _this2.pauseFts = _this2.getValidFts(currentTime, vts, clientServerTimeDifference, live);
     });
 
     this.player.on('ended', function () {
-      _this2.tnsTimerStarted = false;
       _this2.stopTNSTimer();
     });
   };

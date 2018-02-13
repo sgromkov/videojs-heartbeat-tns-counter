@@ -75,16 +75,11 @@ class HeartbeatTnsCounter {
     const serverTimestamp = options.serverTimestamp;
     const clientServerTimeDifference = (serverTimestamp) ?
       clientTimestamp - serverTimestamp : 0;
-    const live = options.live;
-    const fts = this.getValidFts(player.currentTime(), clientTimestamp, clientServerTimeDifference, live);
 
     this.player = player;
     this.options = options;
     this.tnsTimer = null;
     this.clientServerTimeDifference = clientServerTimeDifference;
-    this.allPrerollsEnded = false;
-    this.prerollExists = false;
-    this.pauseFts = fts;
   }
 
   /**
@@ -125,19 +120,11 @@ class HeartbeatTnsCounter {
   /**
    * Try to start counter
    *
-   * @return {boolean} false if request was breaking
+   * @function requestTnsTimerStarting
    */
   requestTnsTimerStarting() {
-    // Если нет IMA (например, вырезал AdBlock)
-    if (typeof this.player.ima === 'object' && !this.allPrerollsEnded) {
-      videojs.log('heartbeatTnsCounter start is break');
-      return false;
-    }
-
-    if (!this.tnsTimerStarted) {
-      this.tnsTimerStarted = true;
-      this.startTNSTimer();
-    }
+    this.stopTNSTimer();
+    this.startTNSTimer();
   }
 
   /**
@@ -152,9 +139,7 @@ class HeartbeatTnsCounter {
       const clientServerTimeDifference = this.clientServerTimeDifference;
       const vts = Math.floor(Date.now() / 1000);
       const live = this.options.live;
-      const fts = (this.player.paused()) ?
-        this.pauseFts :
-        this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
+      const fts = this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
 
       const tnsParams = {
         catid: this.options.catid,
@@ -216,42 +201,11 @@ class HeartbeatTnsCounter {
 
     this.player.addClass('vjs-videojs-heartbeat-tns-counter');
 
-    this.player.one('prerollExists', () => {
-      this.prerollExists = true;
-    });
-
-    this.player.one('allPrerollsEnded', () => {
-      this.allPrerollsEnded = true;
-
-      // Если был показан преролл и это не прямая трансляция,
-      // Перематываем плеер на начало, т.к. из-за прероллов кадры смещаются:
-      if (this.prerollExists && !this.options.live) {
-        this.player.pause();
-        this.player.currentTime(0);
-        this.player.play();
-      }
-
+    this.player.on('playing', () => {
       this.requestTnsTimerStarting();
-    });
-
-    this.player.on('play', () => {
-      this.requestTnsTimerStarting();
-    });
-
-    this.player.on('pause', () => {
-      // Не сбрасываем вызов счетчика,
-      // а сохраняем значение fts в хранилище,
-      // чтобы передавать его при паузе
-      const currentTime = this.player.currentTime();
-      const vts = Math.floor(Date.now() / 1000);
-      const clientServerTimeDifference = this.clientServerTimeDifference;
-      const live = this.options.live;
-
-      this.pauseFts = this.getValidFts(currentTime, vts, clientServerTimeDifference, live);
     });
 
     this.player.on('ended', () => {
-      this.tnsTimerStarted = false;
       this.stopTNSTimer();
     });
   }
