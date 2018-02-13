@@ -1,6 +1,6 @@
 {
   "name": "videojs-heartbeat-tns-counter",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A video.js plugin for heartbeat Mediascope TNS counter",
   "main": "dist/videojs-heartbeat-tns-counter.cjs.js",
   "module": "dist/videojs-heartbeat-tns-counter.es.js",
