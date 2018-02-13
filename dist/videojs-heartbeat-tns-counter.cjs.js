@@ -4,7 +4,7 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var videojs = _interopDefault(require('video.js'));
 
-var version = "1.0.6";
+var version = "1.0.7";
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -353,6 +353,10 @@ var HeartbeatTnsCounter = function () {
 
     this.player.on('playing', function () {
       _this2.requestTnsTimerStarting();
+    });
+
+    this.player.on('pause', function () {
+      this.stopTNSTimer();
     });
 
     this.player.on('ended', function () {

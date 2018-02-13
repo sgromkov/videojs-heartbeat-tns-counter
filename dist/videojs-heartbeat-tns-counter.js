@@ -1,6 +1,6 @@
 /**
  * videojs-heartbeat-tns-counter
- * @version 1.0.6
+ * @version 1.0.7
  * @copyright 2018 Sergey Gromkov <sgromkov@gmail.com>
  * @license MIT
  */
@@ -12,7 +12,7 @@
 
 videojs = videojs && videojs.hasOwnProperty('default') ? videojs['default'] : videojs;
 
-var version = "1.0.6";
+var version = "1.0.7";
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -361,6 +361,10 @@ var HeartbeatTnsCounter = function () {
 
     this.player.on('playing', function () {
       _this2.requestTnsTimerStarting();
+    });
+
+    this.player.on('pause', function () {
+      this.stopTNSTimer();
     });
 
     this.player.on('ended', function () {

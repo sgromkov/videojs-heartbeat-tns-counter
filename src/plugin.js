@@ -213,6 +213,10 @@ class HeartbeatTnsCounter {
       this.requestTnsTimerStarting();
     });
 
+    this.player.on('pause', function () {
+      this.stopTNSTimer();
+    });
+
     this.player.on('ended', () => {
       this.stopTNSTimer();
     });
