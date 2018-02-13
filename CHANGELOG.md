@@ -1,3 +1,6 @@
+<a name="1.0.6"></a>
+## [1.0.6](https://github.com/sgromkov/videojs-heartbeat-tns-counter/compare/v1.0.5...v1.0.6) (2018-02-13)
+
 # CHANGELOG
 
 ## 1.0.5 (2018-02-12)
