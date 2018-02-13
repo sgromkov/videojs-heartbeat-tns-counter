@@ -3,6 +3,9 @@
 
 # CHANGELOG
 
+## 1.0.6 (2018-02-13)
+* [@sgromkov](https://github.com/sgromkov/): Remove ads event and change play listener to playing.
+
 ## 1.0.5 (2018-02-12)
 * [@sgromkov](https://github.com/sgromkov/): Fix first lost FTS when it was NULL.
 
