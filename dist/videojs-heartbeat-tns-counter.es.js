@@ -1,6 +1,6 @@
 import videojs from 'video.js';
 
-var version = "1.0.5";
+var version = "1.0.6";
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -206,6 +206,7 @@ var HeartbeatTnsCounter = function () {
     this.options = options;
     this.tnsTimer = null;
     this.clientServerTimeDifference = clientServerTimeDifference;
+    this.currentTime = null;
   }
 
   /**
@@ -230,7 +231,7 @@ var HeartbeatTnsCounter = function () {
 
 
   HeartbeatTnsCounter.prototype.getValidFts = function getValidFts(currentTime, vts, clientServerTimeDifference, live) {
-    var fts = Math.round(currentTime);
+    var fts = currentTime;
 
     if (live) {
       if (fts < 0) {
@@ -269,7 +270,14 @@ var HeartbeatTnsCounter = function () {
 
     var TNSCatalogCounter = function TNSCatalogCounter() {
 
-      var currentTime = _this.player.currentTime();
+      var currentTime = Math.round(_this.player.currentTime());
+
+      if (_this.currentTime !== null && _this.currentTime === currentTime) {
+        return;
+      }
+
+      _this.currentTime = currentTime;
+
       var clientServerTimeDifference = _this.clientServerTimeDifference;
       var vts = Math.floor(Date.now() / 1000);
       var live = _this.options.live;

@@ -80,6 +80,7 @@ class HeartbeatTnsCounter {
     this.options = options;
     this.tnsTimer = null;
     this.clientServerTimeDifference = clientServerTimeDifference;
+    this.currentTime = null;
   }
 
   /**
@@ -102,7 +103,7 @@ class HeartbeatTnsCounter {
    * @return {number} fts
    */
   getValidFts(currentTime, vts, clientServerTimeDifference, live) {
-    let fts = Math.round(currentTime);
+    let fts = currentTime;
 
     if (live) {
       if (fts < 0) {
@@ -135,7 +136,14 @@ class HeartbeatTnsCounter {
   startTNSTimer() {
     const TNSCatalogCounter = () => {
 
-      const currentTime = this.player.currentTime();
+      const currentTime = Math.round(this.player.currentTime());
+
+      if (this.currentTime !== null && this.currentTime === currentTime) {
+        return;
+      }
+
+      this.currentTime = currentTime;
+
       const clientServerTimeDifference = this.clientServerTimeDifference;
       const vts = Math.floor(Date.now() / 1000);
       const live = this.options.live;
