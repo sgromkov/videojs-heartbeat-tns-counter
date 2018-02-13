@@ -1,7 +1,7 @@
-<a name="1.0.7"></a>
-## [1.0.7](https://github.com/sgromkov/videojs-heartbeat-tns-counter/compare/v1.0.6...v1.0.7) (2018-02-13)
-
 # CHANGELOG
+
+## 1.0.7 (2018-02-13)
+* [@sgromkov](https://github.com/sgromkov/): Break counter request if current time was sended before..
 
 ## 1.0.6 (2018-02-13)
 * [@sgromkov](https://github.com/sgromkov/): Remove ads event and change play listener to playing.
